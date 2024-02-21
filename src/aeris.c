@@ -24,23 +24,9 @@ aeris_error aeris_bootloader_init(aeris_config const *const config) {
     return AERIS_ERR_NONE;
 }
 
-aeris_error aeris_bootloader_run(void) {
-    aeris_error ret = AERIS_ERR_NONE;
-
-    do {
-    // make the state change
-    ret = aeris_bootloader_change_state(prv_aeris.state, prv_aeris.state_request);
-
-    if (ret != AERIS_ERR_NONE) {
-        break;
-    }
-
-    // run the new state
-    aeris_bootloader_run_state(prv_aeris.state);
-    } while (0);
-
-    return ret;
-}
+// ---------------------------------------------------------------------------------------------- //
+// ----------------------------------- PRIMARY USER FUNCTIONS ----------------------------------- //
+// ---------------------------------------------------------------------------------------------- //
 
 aeris_error aeris_request_state(aeris_state_request desired_state) {
     aeris_error ret = AERIS_ERR_NONE;
@@ -56,7 +42,31 @@ aeris_error aeris_request_state(aeris_state_request desired_state) {
     return ret;
 }
 
+aeris_error aeris_bootloader_run(void) {
+    aeris_error ret = AERIS_ERR_NONE;
+
+    if (prv_aeris.state != prv_aeris.state_request) {
+        do {
+        // make the state change
+        ret = aeris_bootloader_change_state(prv_aeris.state, prv_aeris.state_request);
+
+        if (ret != AERIS_ERR_NONE) {
+            break;
+        }
+
+        // run the new state
+        aeris_bootloader_run_state(prv_aeris.state);
+        } while (0);
+    }
+
+    return ret;
+}
+
 aeris_state aeris_get_state(void) {return prv_aeris.state;}
+
+// ---------------------------------------------------------------------------------------------- //
+// ---------------------------------- STATE HANDLING FUNCTIONS ---------------------------------- //
+// ---------------------------------------------------------------------------------------------- //
 
 aeris_error aeris_bootloader_change_state(aeris_state current_state, aeris_state_request desired_state) {
     aeris_error ret = AERIS_ERR_NONE;
@@ -141,7 +151,8 @@ aeris_error aeris_bootloader_run_dfu(void) {
             if (ret != AERIS_ERR_NONE) {
                 break;
             } 
-            aeris_message_t received_message = aeris_bootloader_unpack_message(prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
+            const aeris_message_t received_message = aeris_bootloader_unpack_message(prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
+            // ERROR HANDLE
             if (prv_aeris.dfu_app_size > AERIS_MAX_APP_SIZE) {
                 ret = AERIS_ERR_MSG_FAILURE;
                 message_error = AERIS_MSG_ERR_OVERSIZED;
@@ -166,7 +177,10 @@ aeris_error aeris_bootloader_run_dfu(void) {
 
             switch(received_message.packet_id) {
                 case (AERIS_MESSAGE_TYPE_START): {
-
+                    aeris_bootloader_process_start_packet(&received_message);
+                } break;
+                case (AERIS_MESSAGE_TYPE_DATA): {
+                    aeris_bootloader_process_data_packet(&received_message);
                 } break;
             }
 
@@ -178,6 +192,9 @@ aeris_error aeris_bootloader_run_dfu(void) {
 
 aeris_error aeris_bootloader_run_jump_app(void) {}
 
+// ---------------------------------------------------------------------------------------------- //
+// --------------------------------- MESSAGE HANDLING FUNCTIONS --------------------------------- //
+// ---------------------------------------------------------------------------------------------- //
 
 aeris_message_t aeris_bootloader_unpack_message(uint8_t *const buffer, size_t buffer_size) {
     aeris_message_t message = {0};
@@ -211,6 +228,39 @@ aeris_message_t aeris_bootloader_unpack_message(uint8_t *const buffer, size_t bu
     }
 
     return message;
+}
+
+aeris_error aeris_bootloader_process_start_packet(const aeris_message_t *const message) {
+    aeris_error ret = AERIS_ERR_NONE;
+
+    do {
+        prv_aeris.dfu_app_size = message->packet_payload.start_packet.app_size;
+        prv_aeris.dfu_app_crc = message->packet_payload.start_packet.app_crc;
+    // make function to essentially memset the size into flash memory
+
+    } while (false);
+
+    return ret;
+}
+
+aeris_error aeris_bootloader_process_data_packet(const aeris_message_t *const message) {
+    aeris_error ret = AERIS_ERR_NONE;
+
+    do {
+        uint8_t *data = message->packet_payload.data_packet.app_data;
+        // make function that uses app_starting_addr, vector table offset + size.
+
+    } while (false);
+
+    return ret;
+}
+
+// ---------------------------------------------------------------------------------------------- //
+// ---------------------------------- SENDING ACK/NAK MESSAGES ---------------------------------- //
+// ---------------------------------------------------------------------------------------------- //
+
+aeris_error aeris_bootloader_send_ack_message(aeris_message_error msg_error, uint8_t *buffer) {
+
 }
 
 // Custom CRC calculation

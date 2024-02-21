@@ -47,6 +47,7 @@ typedef enum {
 
 // STATE CHANGE REQUESTS
 typedef enum {
+  AERIS_REQUEST_UNINITIALIZED, // User should never request this
   AERIS_REQUEST_IDLE,
   AERIS_REQUEST_DFU,
   AERIS_REQUEST_JUMP_APP,

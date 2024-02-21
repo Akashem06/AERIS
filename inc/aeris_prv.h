@@ -41,6 +41,7 @@ typedef struct {
   aeris_message_error message_error;
 
   uint32_t dfu_app_size;
+  uint32_t dfu_app_crc;
 
   bool app_failed_crc32;
   bool message_failed_crc16;
