@@ -3,24 +3,30 @@ import socket
 import os
 import time
 
+from variable_lib import *
+
 ################################################################################
 # USER DEFINES
-port = 1024
-host = '127.0.0.1'
-buffer_size = 1024
+COM_PORT = r'COM4'
+BAUDRATE = 115200
 
 ################################################################################
 # UDP SERVER THAT RECIEVES BINARY CHUNKS OTA
-def start_server():
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    server_socket.bind((host, port))
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server_socket.bind((SERVERADDR, PORT))
 
-    host_msg, host_addr = server_socket.recvfrom(buffer_size)
+host_msg, host_addr = server_socket.recvfrom(BUFFER_SIZE)
 
-    msg = "Message from Host {}".format(host_msg.decode('utf-8'))  
-    print(msg)
+print(f"Message from Client: {host_msg.decode()}, responding..." )
 
-    server_socket.sendto(str.encode("Received"), host_addr)
+server_socket.sendto(str.encode("SERVER STARTED"), host_addr)
+
+# TODO: Fix this while loop, if user interupts program it will
+# continue to run until killed.
+while(True):
+    host_msg, host_addr = server_socket.recvfrom(BUFFER_SIZE)
+    print(f"Recieved message: { ' '.join([hex(byte) for byte in host_msg]) }")
+
 
 ################################################################################
 # REPACKAGING RECIEVED BINARY INTO CUSTOM DFU SCHEMA
