@@ -223,19 +223,19 @@ aeris_message_t aeris_bootloader_unpack_message(uint8_t *const buffer, size_t bu
     aeris_message_t message = {0};
     message.packet_sof = buffer[0];
     message.packet_id = buffer[1];
-
+    // LITTLE ENDIAN
     switch (message.packet_id) {
         case AERIS_MESSAGE_TYPE_START: {
-            message.packet_payload.start_packet.app_size |= ((uint32_t) buffer[2]) << 16;
+            message.packet_payload.start_packet.app_size |= ((uint32_t) buffer[2]);
             message.packet_payload.start_packet.app_size |= ((uint32_t) buffer[3]) << 8;
-            message.packet_payload.start_packet.app_size |= ((uint32_t) buffer[4]);
+            message.packet_payload.start_packet.app_size |= ((uint32_t) buffer[4]) << 16;
             
             prv_aeris.dfu_app_size = message.packet_payload.start_packet.app_size;
 
-            message.packet_payload.start_packet.app_crc |= ((uint32_t) buffer[5]) << 24;
-            message.packet_payload.start_packet.app_crc |= ((uint32_t) buffer[6]) << 16;
-            message.packet_payload.start_packet.app_crc |= ((uint32_t) buffer[7]) << 8;
-            message.packet_payload.start_packet.app_crc |= ((uint32_t) buffer[8]);
+            message.packet_payload.start_packet.app_crc |= ((uint32_t) buffer[5]);
+            message.packet_payload.start_packet.app_crc |= ((uint32_t) buffer[6]) << 8;
+            message.packet_payload.start_packet.app_crc |= ((uint32_t) buffer[7]) << 16;
+            message.packet_payload.start_packet.app_crc |= ((uint32_t) buffer[8]) << 24;
             // TODO: Add crc16, buffer[9] and buffer[10]
             message.packet_eof = buffer[11];
         } break;
