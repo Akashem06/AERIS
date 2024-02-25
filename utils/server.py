@@ -1,5 +1,5 @@
-# import serial
 import socket
+import serial
 import os
 import time
 
@@ -21,8 +21,31 @@ print(f"Message from Client: {client_msg.decode()}, responding..." )
 
 server_socket.sendto(str.encode("SERVER STARTED"), client_addr)
 
+stm_serial = serial.Serial(COM_PORT, baudrate=BAUDRATE, timeout=5)
+
+
 ################################################################################
 # REPACKAGING RECIEVED BINARY INTO CUSTOM DFU SCHEMA
+
+def prv_forward_start(client_msg):
+    stm_serial.write(client_msg)
+    try:
+        data = stm_serial.read(12) # Wait for ACK
+        if packet_check(data) and data[1] == AERIS_TYPE_ACK and data[2] == PACKET_ACK:
+            print ("Yay")
+            prv_send_ack(data[2], data[3])
+
+        elif packet_check(data) and data[1] == AERIS_TYPE_ACK and data[2] == PACKET_NACK:
+            print ("Nay, forward the error package")
+            # configure data[3] so it is actually the entire buffer
+            prv_send_ack(data[2], data[3])
+        else:
+            #Define critical error. Most likely 0xffffffff
+            prv_send_ack(PACKET_NACK, 0)
+        
+    except SerialTimeoutException:
+        print("ACK reception timed out")
+        prv_send_ack(PACKET_NACK, 0) # Same as above NACK
 
 ################################################################################
 # SENDING MESSAGE FUNCTIONS WITH SERIAL
@@ -41,14 +64,25 @@ def prv_send_ack(packet_status, error_buffer):
     print(f"DATA: {' '.join([hex(byte) for byte in packet])}")
     server_socket.sendto(packet, client_addr)
 
-# TODO: Fix this while loop, if user interupts program it will
-# continue to run until killed.
-
-while(True):
-    client_msg, client_addr = server_socket.recvfrom(BUFFER_SIZE)
-
+def prv_process_client_message(client_msg):
     if packet_check(client_msg) and client_msg[1] == AERIS_TYPE_START:
-        prv_send_ack(AERIS_TYPE_ACK, 0) # TODO: add error buffer
+        prv_send_ack(AERIS_TYPE_ACK, 0)  # TODO: add error buffer
         # UNPACK/REPACK START MESSAGE + SEND ACK
-    elif  packet_check(client_msg) and client_msg[1] == AERIS_TYPE_DATA:
+    elif packet_check(client_msg) and client_msg[1] == AERIS_TYPE_DATA:
         prv_send_ack(AERIS_TYPE_ACK, 0)
+
+def main():
+    try:
+        while True:
+            client_msg, client_addr = server_socket.recvfrom(BUFFER_SIZE)
+
+            if client_msg:
+                prv_process_client_message(client_msg)
+    except KeyboardInterrupt:
+        print("Killing server.")
+    finally:
+        stm_serial.close()
+        server_socket.close()
+
+if __name__ == "__main__":
+    main()
