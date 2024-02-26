@@ -27,19 +27,18 @@ stm_serial = serial.Serial(COM_PORT, baudrate=BAUDRATE, timeout=5)
 ################################################################################
 # REPACKAGING RECIEVED BINARY INTO CUSTOM DFU SCHEMA
 
-def prv_forward_start(client_msg):
+def prv_forward_msg(client_msg):
     stm_serial.write(client_msg)
     try:
         data = stm_serial.read(12) # Wait for ACK
         if packet_check(data) and data[1] == AERIS_TYPE_ACK:
             prv_send_ack(data[2], data[3:7])
         else:
-            #Define critical error. Most likely 0xffffffff
-            prv_send_ack(PACKET_NACK, 0)
+            prv_send_ack(PACKET_NACK, b'\xff\xff\xff\xff')
         
     except SerialTimeoutException:
         print("ACK reception timed out")
-        prv_send_ack(PACKET_NACK, 0) # Same as above NACK
+        prv_send_ack(PACKET_NACK, b'\xff\xff\xff\xff')
 
 ################################################################################
 # SENDING MESSAGE FUNCTIONS WITH SERIAL
@@ -65,11 +64,9 @@ def prv_send_ack(packet_status, error_buffer):
 
 def prv_process_client_message(client_msg):
     if packet_check(client_msg) and client_msg[1] == AERIS_TYPE_START:
-        prv_forward_start(client_msg)
-        prv_send_ack(AERIS_TYPE_ACK, 0)  # TODO: add error buffer
-        # UNPACK/REPACK START MESSAGE + SEND ACK
+        prv_forward_msg(client_msg)
     elif packet_check(client_msg) and client_msg[1] == AERIS_TYPE_DATA:
-        prv_send_ack(AERIS_TYPE_ACK, 0)
+        prv_forward_msg(client_msg)
 
 def main():
     try:
