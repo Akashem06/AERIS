@@ -31,14 +31,8 @@ def prv_forward_start(client_msg):
     stm_serial.write(client_msg)
     try:
         data = stm_serial.read(12) # Wait for ACK
-        if packet_check(data) and data[1] == AERIS_TYPE_ACK and data[2] == PACKET_ACK:
-            print ("Yay")
-            prv_send_ack(data[2], data[3])
-
-        elif packet_check(data) and data[1] == AERIS_TYPE_ACK and data[2] == PACKET_NACK:
-            print ("Nay, forward the error package")
-            # configure data[3] so it is actually the entire buffer
-            prv_send_ack(data[2], data[3])
+        if packet_check(data) and data[1] == AERIS_TYPE_ACK:
+            prv_send_ack(data[2], data[3:7])
         else:
             #Define critical error. Most likely 0xffffffff
             prv_send_ack(PACKET_NACK, 0)
@@ -58,14 +52,20 @@ def prv_send_ack(packet_status, error_buffer):
     packet = bytearray()
     packet.append(AERIS_SOF)
     packet.append(packet_status)
-    packet.extend(error_buffer.to_bytes(4, byteorder='little'))
+    if isinstance(error_buffer, int):
+        packet.extend(error_buffer.to_bytes(4, byteorder='little', signed=False))
+    elif isinstance(error_buffer, bytes):
+        packet.extend(error_buffer)
+    else:
+        server_socket.sendto(str.encode("SERVER: Failed to send error buffer"))
+        packet.extend(b'\xff\xff\xff\xff')
     packet.extend(crc16)
     packet.append(AERIS_EOF)
-    print(f"DATA: {' '.join([hex(byte) for byte in packet])}")
     server_socket.sendto(packet, client_addr)
 
 def prv_process_client_message(client_msg):
     if packet_check(client_msg) and client_msg[1] == AERIS_TYPE_START:
+        prv_forward_start(client_msg)
         prv_send_ack(AERIS_TYPE_ACK, 0)  # TODO: add error buffer
         # UNPACK/REPACK START MESSAGE + SEND ACK
     elif packet_check(client_msg) and client_msg[1] == AERIS_TYPE_DATA:
