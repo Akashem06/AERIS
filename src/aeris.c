@@ -142,7 +142,8 @@ aeris_error aeris_bootloader_run_state(aeris_state current_state) {
 }
 
 aeris_error aeris_bootloader_run_idle(void) {
-
+    aeris_error ret = AERIS_ERR_NONE;
+    return ret;
 }
 
 aeris_error aeris_bootloader_run_dfu(void) {

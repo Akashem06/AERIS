@@ -93,10 +93,4 @@ aeris_error aeris_bootloader_process(uint8_t *buffer, size_t buffer_size);
  */
 aeris_error aeris_bootloader_run_dfu(void);
 
-/**
- * @brief Initialize the OTA process by downloading and flashing
- * @returns AERIS_EX_OK if success, AERIS_EX_ERR otherwise
- */
-aeris_error AERIS_download_and_flash(void);
-
 #endif
