@@ -66,10 +66,6 @@ def prv_send_start(binary_size, crc32):
     client_socket.sendto(packet, serverAddrPort)
     print(f"SENT START PACKAGE: {' '.join([hex(byte) for byte in packet])}")
     
-
-################################################################################
-# SENDING MESSAGE FUNCTIONS WITH SERIAL
-
 ################################################################################
 # RECEIVING ACK/NACK MESSAGES + READING IT OUT TO USER
 

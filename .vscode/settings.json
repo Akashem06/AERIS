@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "aeris.h": "c",
+        "aeris_prv.h": "c"
+    }
+}

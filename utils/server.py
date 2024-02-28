@@ -41,9 +41,6 @@ def prv_forward_msg(client_msg):
         prv_send_ack(PACKET_NACK, b'\xff\xff\xff\xff')
 
 ################################################################################
-# SENDING MESSAGE FUNCTIONS WITH SERIAL
-
-################################################################################
 # FORWARDING ACK/NACK MESSAGES TO THE HOST
 
 def prv_send_ack(packet_status, error_buffer):
