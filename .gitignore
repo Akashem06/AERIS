@@ -13,3 +13,5 @@ unity.h
 unity_internals.h
 
 .vscode/
+
+build/
