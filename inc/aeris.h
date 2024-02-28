@@ -14,7 +14,7 @@
 // Status code
 typedef enum {
   AERIS_ACK,     
-	AERIS_NACK,   
+	AERIS_NACK
 } aeris_message_status;
 
 // Error data [FOR STATE CHANGES]
@@ -34,7 +34,7 @@ typedef enum {
   AERIS_MSG_ERR_INVALID_ID,
   AERIS_MSG_ERR_OVERSIZED,
   AERIS_MSG_DATA_TRANSMISSION,
-  AERIS_MSG_ERR_INTERNAL_ERR,
+  AERIS_MSG_ERR_INTERNAL_ERR
 } aeris_message_error;
 
 // STATE MACHINE
@@ -75,22 +75,29 @@ typedef struct {
 aeris_error aeris_bootloader_init(void);
 
 /**
- * @brief Recieves data using custom communication protcol defined in aeris_config
- * @param Takes in pointer to recieving buffer and the size of buffer
- * @returns AERIS_ERR_NONE if success, AERIS_EX_ERR otherwise
+ * @brief Requests for the bootloader to change states
+ * @param The desired state for the bootloader
+ * @returns AERIS_ERR_NONE if success, AERIS_ERR_INVALID_ARGS if failure
  */
-aeris_error aeris_bootloader_receive(uint8_t *buffer, size_t buffer_size);
+aeris_error aeris_request_state(aeris_state_request desired_state);
 
 /**
- * @brief Interpets the recieved data and causes state change to occur
- * @returns AERIS_ERR_NONE if success, AERIS_EX_ERR otherwise
+ * @brief Runs the state and handles state changes
+ * @returns AERIS_ERR_NONE if success, relevant AERIS_ERR if failure
  */
-aeris_error aeris_bootloader_process(uint8_t *buffer, size_t buffer_size);
+aeris_error aeris_bootloader_run(void);
 
 /**
- * @brief Initialize the OTA process by downloading and flashing
- * @returns AERIS_ERR_NONE if success, AERIS_EX_ERR otherwise
+ * @brief Retrieves current state 
+ * @returns Gets the current state of the bootloader
  */
-aeris_error aeris_bootloader_run_dfu(void);
+aeris_state aeris_get_state(void);
+
+/**
+ * @brief Sends ACK message 
+ * @returns AERIS_ERR_NONE if success, relevant AERIS_ERR_INVALID_ARGS if failure
+ */
+aeris_error aeris_bootloader_ack_message(aeris_message_error msg_error, aeris_message_status status, uint8_t *buffer)
+
 
 #endif

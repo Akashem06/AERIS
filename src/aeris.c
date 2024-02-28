@@ -5,10 +5,10 @@ static aeris_state_data prv_aeris = {
     .config = NULL,
     .state = AERIS_STATE_UNINITIALIZED,
     .error = AERIS_ERR_NONE,
-    .dfu_app_size = 0
+    .dfu_app_size = 0,
 };
 
-aeris_error aeris_bootloader_init(aeris_config const *const config) {
+aeris_error aeris_bootloader_init(const aeris_config *const config) {
     if (config == NULL || config->uart_transmit == NULL || config->uart_receive == NULL) {
         return AERIS_ERR_INVALID_ARGS;
     } else {
@@ -48,7 +48,7 @@ aeris_error aeris_bootloader_run(void) {
     if (prv_aeris.state != prv_aeris.state_request) {
         do {
         // make the state change
-        ret = aeris_bootloader_change_state(prv_aeris.state, prv_aeris.state_request);
+        ret = prv_aeris_bootloader_change_state(prv_aeris.state, prv_aeris.state_request);
 
         if (ret != AERIS_ERR_NONE) {
             aeris_bootloader_ack_message(AERIS_MSG_ERR_INTERNAL_ERR, AERIS_NACK, prv_aeris.ack_message_buffer);
@@ -57,7 +57,7 @@ aeris_error aeris_bootloader_run(void) {
 
         // run the new state
         // MIGHT MOVE OUT OF THE IF STATEMENT
-        ret = aeris_bootloader_run_state(prv_aeris.state);
+        ret = prv_aeris_bootloader_run_state(prv_aeris.state);
 
         if (ret != AERIS_ERR_NONE) {
             aeris_bootloader_ack_message(AERIS_MSG_ERR_INTERNAL_ERR, AERIS_NACK, prv_aeris.ack_message_buffer);
@@ -76,7 +76,7 @@ aeris_state aeris_get_state(void) {return prv_aeris.state;}
 // ---------------------------------- STATE HANDLING FUNCTIONS ---------------------------------- //
 // ---------------------------------------------------------------------------------------------- //
 
-aeris_error aeris_bootloader_change_state(aeris_state current_state, aeris_state_request desired_state) {
+static aeris_error prv_prv_aeris_bootloader_change_state(aeris_state current_state, aeris_state_request desired_state) {
     aeris_error ret = AERIS_ERR_NONE;
 
     switch (current_state) {
@@ -121,18 +121,18 @@ aeris_error aeris_bootloader_change_state(aeris_state current_state, aeris_state
     return ret;
 }
 
-aeris_error aeris_bootloader_run_state(aeris_state current_state) {
+static aeris_error prv_aeris_bootloader_run_state(aeris_state current_state) {
     aeris_error ret = AERIS_ERR_NONE;
     
     switch (current_state) {
         case (AERIS_STATE_IDLE): {
-            ret = aeris_bootloader_run_idle();
+            ret = prv_aeris_bootloader_run_idle();
         } break;
         case (AERIS_STATE_DFU): {
-            ret = aeris_bootloader_run_dfu();
+            ret = prv_aeris_bootloader_run_dfu();
         } break;
         case (AERIS_STATE_JUMP_APP): {
-            ret = aeris_bootloader_jump_app();
+            ret = prv_aeris_bootloader_jump_app();
         } break;
         default: {
             ret = AERIS_ERR_INVALID_STATE;
@@ -141,12 +141,12 @@ aeris_error aeris_bootloader_run_state(aeris_state current_state) {
     return ret;
 }
 
-aeris_error aeris_bootloader_run_idle(void) {
+static aeris_error prv_aeris_bootloader_run_idle(void) {
     aeris_error ret = AERIS_ERR_NONE;
     return ret;
 }
 
-aeris_error aeris_bootloader_run_dfu(void) {
+static aeris_error prv_aeris_bootloader_run_dfu(void) {
     aeris_error ret = AERIS_ERR_NONE;
     memset(prv_aeris.ack_message_buffer, 0, sizeof(prv_aeris.ack_message_buffer));
     
@@ -158,7 +158,7 @@ aeris_error aeris_bootloader_run_dfu(void) {
             if (ret != AERIS_ERR_NONE) {
                 break;
             } 
-            const aeris_message_t received_message = aeris_bootloader_unpack_message(prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
+            const aeris_message_t received_message = prv_aeris_bootloader_unpack_message(prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
             // ERROR HANDLE
             if (prv_aeris.dfu_app_size > AERIS_MAX_APP_SIZE) {
                 ret = AERIS_ERR_MSG_FAILURE;
@@ -192,10 +192,10 @@ aeris_error aeris_bootloader_run_dfu(void) {
 
             switch(received_message.packet_id) {
                 case (AERIS_MESSAGE_TYPE_START): {
-                    ret = aeris_bootloader_process_start_packet(&received_message);
+                    ret = prv_aeris_bootloader_process_start_packet(&received_message);
                 } break;
                 case (AERIS_MESSAGE_TYPE_DATA): {
-                    ret = aeris_bootloader_process_data_packet(&received_message);
+                    ret = prv_aeris_bootloader_process_data_packet(&received_message);
                 } break;
                 case (AERIS_MESSAGE_TYPE_ACK): 
                     break;
@@ -214,13 +214,13 @@ aeris_error aeris_bootloader_run_dfu(void) {
     return ret;
 }
 
-aeris_error aeris_bootloader_run_jump_app(void) {}
+static aeris_error prv_aeris_bootloader_jump_app(void) {}
 
 // ---------------------------------------------------------------------------------------------- //
 // --------------------------------- MESSAGE HANDLING FUNCTIONS --------------------------------- //
 // ---------------------------------------------------------------------------------------------- //
 
-aeris_message_t aeris_bootloader_unpack_message(uint8_t *const buffer, size_t buffer_size) {
+static aeris_message_t prv_aeris_bootloader_unpack_message(uint8_t *const buffer, size_t buffer_size) {
     aeris_message_t message = {0};
     message.packet_sof = buffer[0];
     message.packet_id = buffer[1];
@@ -254,7 +254,7 @@ aeris_message_t aeris_bootloader_unpack_message(uint8_t *const buffer, size_t bu
     return message;
 }
 
-aeris_error aeris_bootloader_process_start_packet(const aeris_message_t *const message) {
+static aeris_error prv_aeris_bootloader_process_start_packet(const aeris_message_t *const message) {
     aeris_error ret = AERIS_ERR_NONE;
 
     do {
@@ -277,7 +277,7 @@ aeris_error aeris_bootloader_process_start_packet(const aeris_message_t *const m
     return ret;
 }
 
-aeris_error aeris_bootloader_process_data_packet(const aeris_message_t *const message) {
+static aeris_error prv_aeris_bootloader_process_data_packet(const aeris_message_t *const message) {
     aeris_error ret = AERIS_ERR_NONE;
 
     do {

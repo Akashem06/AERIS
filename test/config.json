@@ -1,0 +1,5 @@
+{
+    "include_paths": [
+      "/path/to/project_root/inc"
+    ]
+  }

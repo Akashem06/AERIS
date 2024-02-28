@@ -31,7 +31,6 @@ void uart_receive(uint8_t *buffer, size_t length) {
     printf("\n");
 }
 
-// Set the mock receive data. Typical parameter = tx buffer
 void set_mock_receive_data(uint8_t data, size_t length) {
     memcpy(mock_rx_buffer, data, length);
     mock_rx_index = 0;
