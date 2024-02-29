@@ -7,6 +7,6 @@ IN PROGRESS
 • Flashes new binary using UART bootloader library!<br>
 
 USE:<br>
-make all    -> Build binary
-make clean  -> Delete binary
-make format -> Format all files
+make all    -> Build binary<br>
+make clean  -> Delete binary<br>
+make format -> Format all files<br>

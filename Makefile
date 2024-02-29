@@ -46,4 +46,6 @@ format:
 	$(SCRIPTS_DIR)/format.sh
 
 setup:
+	chmod +x $(SCRIPTS_DIR)/format.sh
+	chmod +x $(SCRIPTS_DIR)/setup.sh
 	$(SCRIPTS_DIR)/setup.sh
