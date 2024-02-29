@@ -122,7 +122,8 @@ static aeris_error prv_aeris_bootloader_run_dfu(void) {
             if (ret != AERIS_ERR_NONE) {
                 break;
             }
-            const aeris_message_t received_message = prv_aeris_bootloader_unpack_message(prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
+            const aeris_message_t received_message = prv_aeris_bootloader_unpack_message(
+                prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
             // ERROR HANDLE
             if (prv_aeris.dfu_app_size > AERIS_MAX_APP_SIZE) {
                 ret = AERIS_ERR_MSG_FAILURE;
