@@ -10,7 +10,6 @@ TEST_INC_DIR := $(TEST_DIR)/inc
 MOCK_DIR := $(TEST_DIR)/mock
 BUILD_DIR := $(PROJECT_DIR)build
 SCRIPTS_DIR := $(PROJECT_DIR)scripts
-SHELL = /bin/bash
 
 CC := gcc
 CFLAGS := -Wall -Werror -I$(INC_DIR) -I$(TEST_INC_DIR) -I$(MOCK_DIR) -I$(CPPUTEST_HOME)/include --std=c99
@@ -42,10 +41,15 @@ $(BUILD_DIR)/%.o: $(MOCK_DIR)/%.c
 clean:
 	rm -rf $(BUILD_DIR)
 
+setup:
+	chmod +x $(SCRIPTS_DIR)/setup.sh
+	chmod +x $(SCRIPTS_DIR)/format.sh
+	chmod +x $(SCRIPTS_DIR)/linter.sh
+	$(SCRIPTS_DIR)/setup.sh
+
 format:
 	$(SCRIPTS_DIR)/format.sh
 
-setup:
-	chmod +x $(SCRIPTS_DIR)/format.sh
-	chmod +x $(SCRIPTS_DIR)/setup.sh
-	$(SCRIPTS_DIR)/setup.sh
+lint:
+	$(SCRIPTS_DIR)/linter.sh
+

@@ -13,7 +13,10 @@
 #define AERIS_MAX_APP_SIZE 1024
 
 // Status code
-typedef enum { AERIS_ACK, AERIS_NACK } aeris_message_status;
+typedef enum {
+    AERIS_ACK,
+    AERIS_NACK
+} aeris_message_status;
 
 // Error data [FOR STATE CHANGES]
 typedef enum {
@@ -87,7 +90,6 @@ aeris_state aeris_get_state(void);
  * @brief Sends ACK message
  * @returns AERIS_ERR_NONE if success, relevant AERIS_ERR_INVALID_ARGS if failure
  */
-aeris_error aeris_bootloader_ack_message(aeris_message_error msg_error, aeris_message_status status,
-                                         uint8_t *buffer);
+aeris_error aeris_bootloader_ack_message(aeris_message_error msg_error, aeris_message_status status, uint8_t *buffer);
 
 #endif
