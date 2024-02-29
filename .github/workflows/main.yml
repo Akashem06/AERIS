@@ -14,8 +14,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run setup script
         run: |
-        make setup
-        make all
+          make setup
+          make all
   format:
     runs-on: ubuntu-latest
     timeout-minutes: 5
