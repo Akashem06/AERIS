@@ -276,17 +276,12 @@ aeris_error aeris_bootloader_ack_message(aeris_message_error msg_error, aeris_me
 // ---------------------------------------------------------------------------------------------- //
 
 aeris_error aeris_request_state(aeris_state desired_state) {
-    aeris_error ret = AERIS_ERR_NONE;
+    if (desired_state == AERIS_STATE_UNINITIALIZED) {
+        return AERIS_ERR_INVALID_ARGS;
+    }
+    prv_aeris.state_request = desired_state;
 
-    do {
-        if (desired_state == AERIS_STATE_UNINITIALIZED) {
-            ret = AERIS_ERR_INVALID_ARGS;
-            break;
-        }
-        prv_aeris.state_request = desired_state;
-    } while (false);
-
-    return ret;
+    return AERIS_ERR_NONE;
 }
 
 aeris_error aeris_bootloader_run(void) {
