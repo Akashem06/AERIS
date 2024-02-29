@@ -9,6 +9,8 @@ TEST_DIR := $(PROJECT_DIR)test
 TEST_INC_DIR := $(TEST_DIR)/inc
 MOCK_DIR := $(TEST_DIR)/mock
 BUILD_DIR := $(PROJECT_DIR)build
+SCRIPTS_DIR := $(PROJECT_DIR)scripts
+SHELL = /bin/bash
 
 CC := gcc
 CFLAGS := -Wall -Werror -I$(INC_DIR) -I$(TEST_INC_DIR) -I$(MOCK_DIR) --std=c99
@@ -38,3 +40,6 @@ $(BUILD_DIR)/%.o: $(MOCK_DIR)
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+format:
+	$(SCRIPTS_DIR)/format.sh
