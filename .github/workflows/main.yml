@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  # Will run on all PR's and pushes to master
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run setup script
+        run: |
+        make setup &&
+        make all
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run formatting check
+        run: bash scripts/check_format.sh
+

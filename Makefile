@@ -13,16 +13,17 @@ SCRIPTS_DIR := $(PROJECT_DIR)scripts
 SHELL = /bin/bash
 
 CC := gcc
-CFLAGS := -Wall -Werror -I$(INC_DIR) -I$(TEST_INC_DIR) -I$(MOCK_DIR) --std=c99
+CFLAGS := -Wall -Werror -I$(INC_DIR) -I$(TEST_INC_DIR) -I$(MOCK_DIR) -I$(CPPUTEST_HOME)/include --std=c99
+LD_FLAGS := -L$(CPPUTEST_HOME)/lib -lCppUTest -lCppUTestExt
 
 C_SRCS := $(wildcard $(SRC_DIR)/*.c)
 C_OBJS := $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(filter %.c, $(C_SRCS)))
 
 C_TEST_SRCS := $(wildcard $(TEST_DIR)/*.c)
-C_TEST_OBJS := $(patsubst $(TEST_DIR)/%.c, &(BUILD_DIR)/%.o, $(filter %.c, $(C_TEST_SRCS)))
+C_TEST_OBJS := $(patsubst $(TEST_DIR)/%.c, $(BUILD_DIR)/%.o, $(filter %.c, $(C_TEST_SRCS)))
 
 MOCK_SRCS := $(wildcard $(MOCK_DIR)/*.c)
-MOCK_OBJS := $(patsubst $(MOCK_DIR)/%.c, &(BUILD_DIR)/%.o, $(filter %.c, $(MOCK_DIR)))
+MOCK_OBJS := $(patsubst $(MOCK_DIR)/%.c, $(BUILD_DIR)/%.o, $(filter %.c, $(MOCK_SRCS)))
 
 $(shell mkdir -p $(BUILD_DIR))
 
@@ -32,10 +33,10 @@ all: $(C_OBJS) $(C_TEST_OBJS) $(MOCK_OBJS)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: $(TEST_DIR)
+$(BUILD_DIR)/%.o: $(TEST_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: $(MOCK_DIR)
+$(BUILD_DIR)/%.o: $(MOCK_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
@@ -43,3 +44,6 @@ clean:
 
 format:
 	$(SCRIPTS_DIR)/format.sh
+
+setup:
+	$(SCRIPTS_DIR)/setup.sh
