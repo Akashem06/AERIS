@@ -1,4 +1,0 @@
-uart_transmit global:[mock_tx_buffer] call:[memcpy,printf] noreturn:[memcpy]
-view_transmit_data global:[mock_tx_buffer] call:[printf] noreturn:[printf]
-uart_receive global:[mock_rx_buffer,mock_rx_index] call:[printf] noreturn:[printf]
-set_mock_receive_data global:[mock_rx_buffer,mock_rx_index] call:[memcpy]

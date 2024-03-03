@@ -1,6 +1,0 @@
-aeris.a1::inc/aeris.h
-aeris_prv.a1::inc/aeris_prv.h
-aeris.a2::src/aeris.c
-aeris_ack.a1::test/aeris_ack.c
-mock_uart.a1::test/inc/mock_uart.h
-mock_uart.a2::test/mock/mock_uart.c

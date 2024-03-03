@@ -12,14 +12,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - name: Build test
+      - name: Running build generation
         run: |
           make setup
           make all
 
-      - name: Run formatting check
+      - name: Running formatting check
         run: bash scripts/check_format.sh
-        
-      - name: Run linting check
+
+      - name: Running static analysis
         run: make lint
 
