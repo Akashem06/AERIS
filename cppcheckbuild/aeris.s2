@@ -1,0 +1,13 @@
+aeris_bootloader_init global:[prv_aeris] call:[memset,sizeof] noreturn:[memset]
+prv_aeris_bootloader_unpack_message global:[prv_aeris]
+prv_aeris_bootloader_process_start_packet global:[prv_aeris] call:[aeris_bootloader_ack_message,while]
+prv_aeris_bootloader_process_data_packet call:[while]
+prv_aeris_bootloader_run_idle
+prv_aeris_bootloader_run_dfu global:[prv_aeris] call:[aeris_bootloader_ack_message,case,memset,prv_aeris_bootloader_process_data_packet,prv_aeris_bootloader_process_start_packet,prv_aeris_bootloader_unpack_message,sizeof,uart_receive,while] noreturn:[aeris_bootloader_ack_message,prv_aeris_bootloader_process_data_packet,prv_aeris_bootloader_process_start_packet]
+prv_aeris_bootloader_jump_app
+prv_aeris_bootloader_change_state global:[prv_aeris]
+prv_aeris_bootloader_run_state call:[case,prv_aeris_bootloader_jump_app,prv_aeris_bootloader_run_dfu,prv_aeris_bootloader_run_idle] noreturn:[prv_aeris_bootloader_jump_app,prv_aeris_bootloader_run_dfu,prv_aeris_bootloader_run_idle]
+aeris_bootloader_ack_message global:[prv_aeris] call:[memcpy,memset,sizeof,uart_transmit,while] noreturn:[memcpy]
+aeris_request_state global:[prv_aeris] call:[while]
+aeris_bootloader_run global:[prv_aeris] call:[aeris_bootloader_ack_message,prv_aeris_bootloader_change_state,prv_aeris_bootloader_run_state,while] noreturn:[while]
+aeris_get_state global:[prv_aeris]

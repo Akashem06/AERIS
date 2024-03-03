@@ -9,18 +9,17 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - name: Run setup script
+      - name: Build test
         run: |
           make setup
           make all
-  format:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v3
+
       - name: Run formatting check
         run: bash scripts/check_format.sh
+        
+      - name: Run linting check
+        run: make lint
 

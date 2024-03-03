@@ -15,6 +15,7 @@ aeris_error aeris_bootloader_init(aeris_config *const config) {
     } else {
         prv_aeris.config = config;
         prv_aeris.state = AERIS_STATE_IDLE;
+        prv_aeris.state_request = AERIS_STATE_IDLE;
         prv_aeris.error = AERIS_ERR_NONE;
         prv_aeris.message_error = AERIS_MSG_ERR_NONE;
         prv_aeris.app_failed_crc32 = 0;
@@ -29,8 +30,7 @@ aeris_error aeris_bootloader_init(aeris_config *const config) {
 // --------------------------------- MESSAGE HANDLING FUNCTIONS --------------------------------- //
 // ---------------------------------------------------------------------------------------------- //
 
-static aeris_message_t prv_aeris_bootloader_unpack_message(uint8_t *const buffer,
-                                                           size_t buffer_size) {
+static aeris_message_t prv_aeris_bootloader_unpack_message(uint8_t *const buffer, size_t buffer_size) {
     aeris_message_t message = {0};
     message.packet_sof = buffer[0];
     message.packet_id = buffer[1];
@@ -72,8 +72,7 @@ static aeris_error prv_aeris_bootloader_process_start_packet(const aeris_message
             ret = AERIS_ERR_MSG_FAILURE;
             prv_aeris.message_error = AERIS_MSG_ERR_OVERSIZED;
             // Ack with error
-            aeris_bootloader_ack_message(AERIS_MSG_ERR_OVERSIZED, AERIS_ACK,
-                                         prv_aeris.ack_message_buffer);
+            aeris_bootloader_ack_message(AERIS_MSG_ERR_OVERSIZED, AERIS_ACK, prv_aeris.ack_message_buffer);
             break;
         }
         prv_aeris.dfu_app_size = message->packet_payload.start_packet.app_size;
@@ -112,77 +111,66 @@ static aeris_error prv_aeris_bootloader_run_idle(void) {
 static aeris_error prv_aeris_bootloader_run_dfu(void) {
     aeris_error ret = AERIS_ERR_NONE;
     memset(prv_aeris.ack_message_buffer, 0, sizeof(prv_aeris.ack_message_buffer));
+    do {
+        memset(prv_aeris.message_buffer, 0, sizeof(prv_aeris.message_buffer));
 
-    if (ret == AERIS_ERR_NONE) {
-        do {
-            memset(prv_aeris.message_buffer, 0, sizeof(prv_aeris.message_buffer));
+        ret = prv_aeris.config->uart_receive(prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
+        if (ret != AERIS_ERR_NONE) {
+            break;
+        }
+        const aeris_message_t received_message = prv_aeris_bootloader_unpack_message(prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
+        // ERROR HANDLE
+        if (prv_aeris.dfu_app_size > AERIS_MAX_APP_SIZE) {
+            ret = AERIS_ERR_MSG_FAILURE;
+            prv_aeris.message_error = AERIS_MSG_ERR_OVERSIZED;
+            // Ack wtih error
+            aeris_bootloader_ack_message(AERIS_MSG_ERR_OVERSIZED, AERIS_ACK, prv_aeris.ack_message_buffer);
+            break;
+        }
 
-            ret = prv_aeris.config->uart_receive(prv_aeris.message_buffer,
-                                                 sizeof(prv_aeris.message_buffer));
-            if (ret != AERIS_ERR_NONE) {
-                break;
-            }
-            const aeris_message_t received_message = prv_aeris_bootloader_unpack_message(
-                prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
-            // ERROR HANDLE
-            if (prv_aeris.dfu_app_size > AERIS_MAX_APP_SIZE) {
-                ret = AERIS_ERR_MSG_FAILURE;
-                prv_aeris.message_error = AERIS_MSG_ERR_OVERSIZED;
-                // Ack wtih error
-                aeris_bootloader_ack_message(AERIS_MSG_ERR_OVERSIZED, AERIS_ACK,
-                                             prv_aeris.ack_message_buffer);
-                break;
-            }
+        if (received_message.packet_sof != AERIS_SOF) {
+            ret = AERIS_ERR_MSG_FAILURE;
+            prv_aeris.message_error = AERIS_MSG_ERR_INVALID_SOF;
+            // Send Ack wtih error
+            aeris_bootloader_ack_message(AERIS_MSG_ERR_INVALID_SOF, AERIS_ACK, prv_aeris.ack_message_buffer);
+            break;
+        }
+        if (received_message.packet_id == AERIS_MESSAGE_ID_UNKNOWN || received_message.packet_id >= NUM_AERIS_MESSAGE_ID) {
+            ret = AERIS_ERR_MSG_FAILURE;
+            prv_aeris.message_error = AERIS_MSG_ERR_INVALID_ID;
+            // Send Ack wtih error
+            aeris_bootloader_ack_message(AERIS_MSG_ERR_INVALID_ID, AERIS_ACK, prv_aeris.ack_message_buffer);
+            break;
+        }
+        if (received_message.packet_eof != AERIS_EOF) {
+            ret = AERIS_ERR_MSG_FAILURE;
+            prv_aeris.message_error = AERIS_MSG_ERR_INVALID_EOF;
+            // Send Ack wtih error
+            aeris_bootloader_ack_message(AERIS_MSG_ERR_INVALID_EOF, AERIS_ACK, prv_aeris.ack_message_buffer);
+            break;
+        }
 
-            if (received_message.packet_sof != AERIS_SOF) {
-                ret = AERIS_ERR_MSG_FAILURE;
-                prv_aeris.message_error = AERIS_MSG_ERR_INVALID_SOF;
-                // Send Ack wtih error
-                aeris_bootloader_ack_message(AERIS_MSG_ERR_INVALID_SOF, AERIS_ACK,
-                                             prv_aeris.ack_message_buffer);
+        switch (received_message.packet_id) {
+            case (AERIS_MESSAGE_TYPE_START): {
+                ret = prv_aeris_bootloader_process_start_packet(&received_message);
+            } break;
+            case (AERIS_MESSAGE_TYPE_DATA): {
+                ret = prv_aeris_bootloader_process_data_packet(&received_message);
+            } break;
+            case (AERIS_MESSAGE_TYPE_ACK):
                 break;
-            }
-            if (received_message.packet_id < 0 ||
-                received_message.packet_id >= NUM_AERIS_MESSAGE_ID) {
-                ret = AERIS_ERR_MSG_FAILURE;
-                prv_aeris.message_error = AERIS_MSG_ERR_INVALID_ID;
-                // Send Ack wtih error
-                aeris_bootloader_ack_message(AERIS_MSG_ERR_INVALID_ID, AERIS_ACK,
-                                             prv_aeris.ack_message_buffer);
+            default:
                 break;
-            }
-            if (received_message.packet_eof != AERIS_EOF) {
-                ret = AERIS_ERR_MSG_FAILURE;
-                prv_aeris.message_error = AERIS_MSG_ERR_INVALID_EOF;
-                // Send Ack wtih error
-                aeris_bootloader_ack_message(AERIS_MSG_ERR_INVALID_EOF, AERIS_ACK,
-                                             prv_aeris.ack_message_buffer);
-                break;
-            }
+        }
 
-            switch (received_message.packet_id) {
-                case (AERIS_MESSAGE_TYPE_START): {
-                    ret = prv_aeris_bootloader_process_start_packet(&received_message);
-                } break;
-                case (AERIS_MESSAGE_TYPE_DATA): {
-                    ret = prv_aeris_bootloader_process_data_packet(&received_message);
-                } break;
-                case (AERIS_MESSAGE_TYPE_ACK):
-                    break;
-                default:
-                    break;
-            }
+        if (ret != AERIS_ERR_NONE) {
+            break;
+        }
+        prv_aeris.message_error = AERIS_MSG_ERR_NONE;  // At this point everything works! So no
+                                                       // error should be present
+        ret = aeris_bootloader_ack_message(prv_aeris.message_error, AERIS_ACK, prv_aeris.ack_message_buffer);
 
-            if (ret != AERIS_ERR_NONE) {
-                break;
-            }
-            prv_aeris.message_error = AERIS_MSG_ERR_NONE;  // At this point everything works! So no
-                                                           // error should be present
-            ret = aeris_bootloader_ack_message(prv_aeris.message_error, AERIS_ACK,
-                                               prv_aeris.ack_message_buffer);
-
-        } while (false);
-    }
+    } while (false);
     return ret;
 }
 
@@ -195,8 +183,7 @@ static aeris_error prv_aeris_bootloader_jump_app(void) {
 // ---------------------------------- STATE HANDLING FUNCTIONS ---------------------------------- //
 // ---------------------------------------------------------------------------------------------- //
 
-static aeris_error prv_aeris_bootloader_change_state(aeris_state current_state,
-                                                     aeris_state desired_state) {
+static aeris_error prv_aeris_bootloader_change_state(aeris_state current_state, aeris_state desired_state) {
     aeris_error ret = AERIS_ERR_NONE;
 
     switch (current_state) {
@@ -265,11 +252,10 @@ static aeris_error prv_aeris_bootloader_run_state(aeris_state current_state) {
 // ---------------------------------- SENDING ACK/NAK MESSAGES ---------------------------------- //
 // ---------------------------------------------------------------------------------------------- //
 
-aeris_error aeris_bootloader_ack_message(aeris_message_error msg_error, aeris_message_status status,
-                                         uint8_t *buffer) {
+aeris_error aeris_bootloader_ack_message(aeris_message_error msg_error, aeris_message_status status, uint8_t *buffer) {
     aeris_error ret = AERIS_ERR_NONE;
     do {
-        if (buffer == NULL || sizeof(buffer) < AERIS_ACK_MESSAGE_SIZE) {
+        if (sizeof(buffer) < AERIS_ACK_MESSAGE_SIZE) {
             ret = AERIS_ERR_INVALID_ARGS;
             return ret;
         }
@@ -281,8 +267,7 @@ aeris_error aeris_bootloader_ack_message(aeris_message_error msg_error, aeris_me
         memcpy(&buffer[3], &msg_error, 4);
 
     } while (false);
-    prv_aeris.config->uart_transmit(prv_aeris.ack_message_buffer,
-                                    sizeof(prv_aeris.ack_message_buffer));
+    prv_aeris.config->uart_transmit(prv_aeris.ack_message_buffer, sizeof(prv_aeris.ack_message_buffer));
     return ret;
 }
 
@@ -291,17 +276,12 @@ aeris_error aeris_bootloader_ack_message(aeris_message_error msg_error, aeris_me
 // ---------------------------------------------------------------------------------------------- //
 
 aeris_error aeris_request_state(aeris_state desired_state) {
-    aeris_error ret = AERIS_ERR_NONE;
+    if (desired_state == AERIS_STATE_UNINITIALIZED) {
+        return AERIS_ERR_INVALID_ARGS;
+    }
+    prv_aeris.state_request = desired_state;
 
-    do {
-        if (desired_state < 0 || desired_state >= NUM_AERIS_STATES) {
-            ret = AERIS_ERR_INVALID_ARGS;
-            break;
-        }
-        prv_aeris.state_request = desired_state;
-    } while (false);
-
-    return ret;
+    return AERIS_ERR_NONE;
 }
 
 aeris_error aeris_bootloader_run(void) {
@@ -313,8 +293,7 @@ aeris_error aeris_bootloader_run(void) {
             ret = prv_aeris_bootloader_change_state(prv_aeris.state, prv_aeris.state_request);
 
             if (ret != AERIS_ERR_NONE) {
-                aeris_bootloader_ack_message(AERIS_MSG_ERR_INTERNAL_ERR, AERIS_NACK,
-                                             prv_aeris.ack_message_buffer);
+                aeris_bootloader_ack_message(AERIS_MSG_ERR_INTERNAL_ERR, AERIS_NACK, prv_aeris.ack_message_buffer);
                 break;
             }
 
@@ -323,8 +302,7 @@ aeris_error aeris_bootloader_run(void) {
             ret = prv_aeris_bootloader_run_state(prv_aeris.state);
 
             if (ret != AERIS_ERR_NONE) {
-                aeris_bootloader_ack_message(AERIS_MSG_ERR_INTERNAL_ERR, AERIS_NACK,
-                                             prv_aeris.ack_message_buffer);
+                aeris_bootloader_ack_message(AERIS_MSG_ERR_INTERNAL_ERR, AERIS_NACK, prv_aeris.ack_message_buffer);
                 break;
             }
 

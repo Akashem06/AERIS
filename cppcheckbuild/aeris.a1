@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<analyzerinfo checksum="3858525333">
+  <FileInfo check="CheckUnusedFunctions">
+    <functioncall functionName="AERIS_ACK"/>
+    <functioncall functionName="AERIS_ERR_INVALID_ARGS"/>
+    <functioncall functionName="AERIS_ERR_INVALID_STATE"/>
+    <functioncall functionName="AERIS_ERR_MSG_FAILURE"/>
+    <functioncall functionName="AERIS_ERR_NONE"/>
+    <functioncall functionName="AERIS_ERR_OUT_OF_RANGE"/>
+    <functioncall functionName="AERIS_MSG_DATA_TRANSMISSION"/>
+    <functioncall functionName="AERIS_MSG_ERR_INTERNAL_ERR"/>
+    <functioncall functionName="AERIS_MSG_ERR_INVALID_EOF"/>
+    <functioncall functionName="AERIS_MSG_ERR_INVALID_ID"/>
+    <functioncall functionName="AERIS_MSG_ERR_INVALID_SOF"/>
+    <functioncall functionName="AERIS_MSG_ERR_NONE"/>
+    <functioncall functionName="AERIS_MSG_ERR_OVERSIZED"/>
+    <functioncall functionName="AERIS_NACK"/>
+    <functioncall functionName="AERIS_STATE_DFU"/>
+    <functioncall functionName="AERIS_STATE_IDLE"/>
+    <functioncall functionName="AERIS_STATE_JUMP_APP"/>
+    <functioncall functionName="AERIS_STATE_UNINITIALIZED"/>
+    <functioncall functionName="NUM_AERIS_STATES"/>
+    <functioncall functionName="aeris_message_error"/>
+    <functioncall functionName="void"/>
+  </FileInfo>
+</analyzerinfo>
