@@ -1,0 +1,11 @@
+[MASTER]
+max-line-length = 100
+
+[MESSAGES CONTROL]
+disable = C0103, C0114, C0115, C0116
+
+[FORMAT]
+docstring-quotes = double
+
+[TYPECHECK]
+allow-untyped-defs = yes
