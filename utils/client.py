@@ -13,10 +13,10 @@ serverAddrPort = (SERVERADDR, PORT)
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 client_socket.sendto(str.encode("CLIENT STARTED"), serverAddrPort)
 
-server_msg, server_addr = client_socket.recvfrom(BUFFER_SIZE)  
+server_msg, server_addr = client_socket.recvfrom(BUFFER_SIZE)
 print(f"Message from Server: {server_msg.decode()}.")
 print(f"Server address/port: {server_addr}.")
-print("Connection established!")  
+print("Connection established!")
 
 ################################################################################
 # PACKAGING INTO CUSTOM SCHEMA FOR SERVER
@@ -31,7 +31,7 @@ def send_binary_ota():
         if packet_check(server_msg) and server_msg[1] == AERIS_TYPE_ACK and server_msg[2] == PACKET_ACK:
             binary_byte_counter = 0
             binary = open(path, 'rb')
-
+            # CHUNKIFY
             while (binary_byte_counter < binary_size):
                 chunk = binary.read(512)
                 binary_byte_counter += len(chunk)

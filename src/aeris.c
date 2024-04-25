@@ -10,7 +10,7 @@ static aeris_state_data prv_aeris = {
 };
 
 aeris_error aeris_bootloader_init(aeris_config *const config) {
-    if (config == NULL || config->uart_transmit == NULL || config->uart_receive == NULL) {
+    if (config == NULL || config->transmit_data == NULL || config->receive_data == NULL) {
         return AERIS_ERR_INVALID_ARGS;
     } else {
         prv_aeris.config = config;
@@ -78,6 +78,15 @@ static aeris_error prv_aeris_bootloader_process_start_packet(const aeris_message
         prv_aeris.dfu_app_size = message->packet_payload.start_packet.app_size;
         prv_aeris.dfu_app_crc = message->packet_payload.start_packet.app_crc;
 
+        if (prv_aeris.dfu_app_size > AERIS_MAX_APP_SIZE) {
+            ret = AERIS_ERR_MSG_FAILURE;
+            prv_aeris.message_error = AERIS_MSG_ERR_OVERSIZED;
+            // Ack wtih error
+            aeris_bootloader_ack_message(AERIS_MSG_ERR_OVERSIZED, AERIS_ACK, prv_aeris.ack_message_buffer);
+            break;
+        }
+
+        // check crc
         // make function to essentially memset the size into flash memory
 
     } while (false);
@@ -114,19 +123,12 @@ static aeris_error prv_aeris_bootloader_run_dfu(void) {
     do {
         memset(prv_aeris.message_buffer, 0, sizeof(prv_aeris.message_buffer));
 
-        ret = prv_aeris.config->uart_receive(prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
+        ret = prv_aeris.config->receive_data(prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
         if (ret != AERIS_ERR_NONE) {
             break;
         }
         const aeris_message_t received_message = prv_aeris_bootloader_unpack_message(prv_aeris.message_buffer, sizeof(prv_aeris.message_buffer));
         // ERROR HANDLE
-        if (prv_aeris.dfu_app_size > AERIS_MAX_APP_SIZE) {
-            ret = AERIS_ERR_MSG_FAILURE;
-            prv_aeris.message_error = AERIS_MSG_ERR_OVERSIZED;
-            // Ack wtih error
-            aeris_bootloader_ack_message(AERIS_MSG_ERR_OVERSIZED, AERIS_ACK, prv_aeris.ack_message_buffer);
-            break;
-        }
 
         if (received_message.packet_sof != AERIS_SOF) {
             ret = AERIS_ERR_MSG_FAILURE;
@@ -175,6 +177,7 @@ static aeris_error prv_aeris_bootloader_run_dfu(void) {
 }
 
 static aeris_error prv_aeris_bootloader_jump_app(void) {
+    // make user input mem location in config. Jump to that
     aeris_error ret = AERIS_ERR_NONE;
     return ret;
 }
@@ -267,7 +270,7 @@ aeris_error aeris_bootloader_ack_message(aeris_message_error msg_error, aeris_me
         memcpy(&buffer[3], &msg_error, 4);
 
     } while (false);
-    prv_aeris.config->uart_transmit(prv_aeris.ack_message_buffer, sizeof(prv_aeris.ack_message_buffer));
+    prv_aeris.config->transmit_data(prv_aeris.ack_message_buffer, sizeof(prv_aeris.ack_message_buffer));
     return ret;
 }
 

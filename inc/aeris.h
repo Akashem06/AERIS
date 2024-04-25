@@ -47,8 +47,8 @@ typedef enum {
     NUM_AERIS_STATES
 } aeris_state;
 
-typedef aeris_message_error (*aeris_custom_uart_transmit)(const uint8_t *data, size_t length);
-typedef aeris_message_error (*aeris_custom_uart_receive)(uint8_t *buffer, size_t buffer_size);
+typedef aeris_message_error (*aeris_custom_transmit)(const uint8_t *data, size_t length);
+typedef aeris_message_error (*aeris_custom_receive)(uint8_t *buffer, size_t buffer_size);
 // typedef uintptr_t aeris_bootloader_addr_size_t;
 // typedef uint32_t aeris_bootloader_crc;
 // typedef uint32_t aeris_bootloader_size;
@@ -57,8 +57,8 @@ typedef struct {
     bool jump_app_if_dfu;
     uint32_t app_stack_start_addr;
     uint8_t app_reset_handler_offset;
-    aeris_custom_uart_transmit uart_transmit;
-    aeris_custom_uart_receive uart_receive;
+    aeris_custom_transmit transmit_data;
+    aeris_custom_receive receive_data;
 } aeris_config;
 
 /**

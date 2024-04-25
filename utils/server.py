@@ -1,7 +1,5 @@
 import socket
 import serial
-import os
-import time
 
 from variable_lib import *
 
@@ -80,3 +78,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
