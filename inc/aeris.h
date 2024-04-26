@@ -10,7 +10,9 @@
 #define AERIS_EOF (0xBB)  // End of Frame byte
 #define AERIS_ACK_MESSAGE_SIZE 8U
 
-#define AERIS_MAX_APP_SIZE 1024
+#define AERIS_START_MESSAGE_SIZE 12U
+
+#define AERIS_MAX_APP_SIZE 32000
 
 // Status code
 typedef enum {
@@ -24,7 +26,8 @@ typedef enum {
     AERIS_ERR_INVALID_ARGS,
     AERIS_ERR_INVALID_STATE,
     AERIS_ERR_MSG_FAILURE,
-    AERIS_ERR_OUT_OF_RANGE
+    AERIS_ERR_OUT_OF_RANGE,
+    AERIS_ERR_START_NOT_RECEIVED
 } aeris_error;
 
 // Error data [FOR MESSAGES]
@@ -47,6 +50,13 @@ typedef enum {
     NUM_AERIS_STATES
 } aeris_state;
 
+typedef enum {
+    AERIS_STATE_DFU_START,
+    AERIS_STATE_DFU_DATA,
+    AERIS_STATE_DFU_COMPLETE,
+    NUM_AERIS_DFU_STATES
+} aeris_dfu_states;
+
 typedef aeris_message_error (*aeris_custom_transmit)(const uint8_t *data, size_t length);
 typedef aeris_message_error (*aeris_custom_receive)(uint8_t *buffer, size_t buffer_size);
 // typedef uintptr_t aeris_bootloader_addr_size_t;
@@ -59,6 +69,9 @@ typedef struct {
     uint8_t app_reset_handler_offset;
     aeris_custom_transmit transmit_data;
     aeris_custom_receive receive_data;
+
+    bool pending_data;
+    uint8_t message_buffer[AERIS_MAX_APP_SIZE];
 } aeris_config;
 
 /**
@@ -85,6 +98,18 @@ aeris_error aeris_bootloader_run(void);
  * @returns Gets the current state of the bootloader
  */
 aeris_state aeris_get_state(void);
+
+/**
+ * @brief Retrieves most recent message error
+ * @returns Returns message error
+ */
+uint8_t aeris_get_message_error(void);
+
+/**
+ * @brief Retrieves state machines error
+ * @returns Returns state error
+ */
+uint8_t aeris_get_error(void);
 
 /**
  * @brief Sends ACK message

@@ -14,4 +14,6 @@
 aeris_message_error uart_transmit(const uint8_t *data, size_t length);
 aeris_message_error uart_receive(uint8_t *buffer, size_t buffer_size);
 
+void set_mock_receive_data(uint8_t *data, size_t length);
+
 #endif

@@ -1,7 +1,9 @@
 #include "mock_uart.h"
+#include "mock_config.h"
 
-uint8_t mock_tx_buffer[BUFFER_SIZE];
-uint8_t mock_rx_buffer[BUFFER_SIZE];
+// rx buffer = message buffer
+uint8_t mock_tx_buffer[BUFFER_SIZE] = {0};
+uint8_t mock_rx_buffer[BUFFER_SIZE] = {0};
 static size_t mock_rx_index = 0;
 
 aeris_message_error uart_transmit(const uint8_t *data, size_t length) {
@@ -32,7 +34,7 @@ aeris_message_error uart_receive(uint8_t *buffer, size_t length) {
     return AERIS_MSG_ERR_NONE;
 }
 
-void set_mock_receive_data(uint8_t data, size_t length) {
-    memcpy(mock_rx_buffer, &data, length);
+void set_mock_receive_data(uint8_t *data, size_t length) {
+    memcpy(mock_rx_buffer, data, length);
     mock_rx_index = 0;
 }

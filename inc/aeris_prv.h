@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "aeris.h"
+#include "aeris.h" 
 
 // Message type
 typedef enum {
@@ -47,7 +47,8 @@ typedef struct {
     bool app_failed_crc32;
     bool message_failed_crc16;
 
-    uint8_t message_buffer[AERIS_MAX_APP_SIZE];
+    uint32_t bytes_written;
+
     uint8_t ack_message_buffer[AERIS_ACK_MESSAGE_SIZE];
 } aeris_state_data;
 
