@@ -12,7 +12,7 @@
 
 #define AERIS_START_MESSAGE_SIZE 12U
 
-#define AERIS_MAX_APP_SIZE 32000
+#define AERIS_MAX_APP_SIZE 128 // USER DEFIEND IN KB
 
 // Status code
 typedef enum {

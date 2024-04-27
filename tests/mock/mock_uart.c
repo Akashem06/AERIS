@@ -7,13 +7,13 @@ uint8_t mock_rx_buffer[BUFFER_SIZE] = {0};
 static size_t mock_rx_index = 0;
 
 aeris_message_error uart_transmit(const uint8_t *data, size_t length) {
-    printf("Emulating UART Transmit");
+    printf("MOCK_UART: Emulating UART Transmit\n");
     memcpy(mock_tx_buffer, data, length);
     return AERIS_MSG_ERR_NONE;
 }
 
 void view_transmit_data(void) {
-    printf("Reading...");
+    printf("MOCK_UART: Reading...");
     for (int i = 0; i < BUFFER_SIZE; i++) {
         printf("%02X ", mock_tx_buffer[i]);
     }
@@ -21,7 +21,7 @@ void view_transmit_data(void) {
 }
 
 aeris_message_error uart_receive(uint8_t *buffer, size_t length) {
-    printf("Emulating UART Receive\n");
+    printf("MOCK_UART: Emulating UART Receive\n");
     for (size_t i = 0; i < length; ++i) {
         buffer[i] = mock_rx_buffer[mock_rx_index++];
         printf("%02X ", buffer[i]);
