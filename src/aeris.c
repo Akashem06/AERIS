@@ -30,6 +30,55 @@ aeris_error aeris_bootloader_init(aeris_config *const config) {
 }
 
 // ---------------------------------------------------------------------------------------------- //
+// ---------------------------------------- CHANGE STATE ---------------------------------------- //
+// ---------------------------------------------------------------------------------------------- //
+
+static aeris_error prv_aeris_bootloader_change_state(aeris_state current_state, aeris_state desired_state) {
+    aeris_error ret = AERIS_ERR_NONE;
+
+    switch (current_state) {
+        case AERIS_STATE_IDLE:
+            switch (desired_state) {
+                case AERIS_STATE_JUMP_APP: {
+                    prv_aeris.state = AERIS_STATE_JUMP_APP;
+                } break;
+                case AERIS_STATE_DFU: {
+                    prv_aeris.state = AERIS_STATE_DFU;
+                } break;
+                default: {
+                    ret = AERIS_ERR_INVALID_ARGS;
+                } break;
+            }
+            break;
+
+        case AERIS_STATE_DFU:
+            switch (desired_state) {
+                case AERIS_STATE_JUMP_APP: {
+                    prv_aeris.state = AERIS_STATE_JUMP_APP;
+                } break;
+                case AERIS_STATE_IDLE: {
+                    prv_aeris.state = AERIS_STATE_IDLE;
+                } break;
+                default: {
+                    ret = AERIS_ERR_INVALID_ARGS;
+                } break;
+            }
+            break;
+
+        case AERIS_STATE_JUMP_APP:
+            if (desired_state == AERIS_STATE_IDLE) {
+                prv_aeris.state = AERIS_STATE_IDLE;
+            }
+            break;
+
+        default:
+            ret = AERIS_ERR_INVALID_ARGS;
+    }
+
+    return ret;
+}
+
+// ---------------------------------------------------------------------------------------------- //
 // ------------------------------------- DFU INIT FUNCTIONS ------------------------------------- //
 // ---------------------------------------------------------------------------------------------- //
 
@@ -41,8 +90,7 @@ static aeris_error prv_aeris_bootloader_dfu_init(void) {
         // get the start and end addresses from NVM
 
         // Erase the flash
-
-        prv_aeris.state = AERIS_STATE_DFU;
+        ret = prv_aeris_bootloader_change_state(AERIS_STATE_IDLE, AERIS_STATE_DFU);
     } while (false);
 
     return ret;
@@ -218,51 +266,6 @@ static aeris_error prv_aeris_bootloader_jump_app(void) {
 // ---------------------------------- STATE HANDLING FUNCTIONS ---------------------------------- //
 // ---------------------------------------------------------------------------------------------- //
 
-static aeris_error prv_aeris_bootloader_change_state(aeris_state current_state, aeris_state desired_state) {
-    aeris_error ret = AERIS_ERR_NONE;
-
-    switch (current_state) {
-        case AERIS_STATE_IDLE:
-            switch (desired_state) {
-                case AERIS_STATE_JUMP_APP: {
-                    prv_aeris.state = AERIS_STATE_JUMP_APP;
-                } break;
-                case AERIS_STATE_DFU: {
-                    prv_aeris.state = AERIS_STATE_DFU;
-                } break;
-                default: {
-                    ret = AERIS_ERR_INVALID_ARGS;
-                } break;
-            }
-            break;
-
-        case AERIS_STATE_DFU:
-            switch (desired_state) {
-                case AERIS_STATE_JUMP_APP: {
-                    prv_aeris.state = AERIS_STATE_JUMP_APP;
-                } break;
-                case AERIS_STATE_IDLE: {
-                    prv_aeris.state = AERIS_STATE_IDLE;
-                } break;
-                default: {
-                    ret = AERIS_ERR_INVALID_ARGS;
-                } break;
-            }
-            break;
-
-        case AERIS_STATE_JUMP_APP:
-            if (desired_state == AERIS_STATE_IDLE) {
-                prv_aeris.state = AERIS_STATE_IDLE;
-            }
-            break;
-
-        default:
-            ret = AERIS_ERR_INVALID_ARGS;
-    }
-
-    return ret;
-}
-
 static aeris_error prv_aeris_bootloader_run_state(aeris_state current_state) {
     aeris_error ret = AERIS_ERR_NONE;
 
@@ -303,8 +306,7 @@ aeris_error aeris_bootloader_ack_message(aeris_message_error msg_error, aeris_me
         memcpy(&buffer[3], &msg_error, 4);
 
     } while (false);
-    printf("AERIS_MESSAGE STATUS% d\n", status);
-    printf("AERIS_MESSAGE ERROR %d\n", msg_error);
+    prv_aeris.config->pending_data = false;
     prv_aeris.config->transmit_data(prv_aeris.ack_message_buffer, sizeof(prv_aeris.ack_message_buffer));
     return ret;
 }
@@ -339,6 +341,8 @@ aeris_error aeris_bootloader_run(void) {
 
     // MIGHT MOVE OUT OF THE IF STATEMENT
     ret = prv_aeris_bootloader_run_state(prv_aeris.state);
+
+    prv_aeris.error = ret;
 
     return ret;
 }

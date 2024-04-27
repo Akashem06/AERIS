@@ -21,7 +21,7 @@ void view_transmit_data(void) {
 }
 
 aeris_message_error uart_receive(uint8_t *buffer, size_t length) {
-    printf("MOCK_UART: Emulating UART Receive\n");
+    printf("MOCK_UART: Emulating UART Receive ");
     for (size_t i = 0; i < length; ++i) {
         buffer[i] = mock_rx_buffer[mock_rx_index++];
         printf("%02X ", buffer[i]);
@@ -31,6 +31,7 @@ aeris_message_error uart_receive(uint8_t *buffer, size_t length) {
         }
     }
     printf("\n");
+    default_test_config.pending_data = true;
     return AERIS_MSG_ERR_NONE;
 }
 
