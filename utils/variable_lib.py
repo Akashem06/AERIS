@@ -18,5 +18,7 @@ AERIS_TYPE_ACK = 0x03
 PACKET_ACK = 0x00
 PACKET_NACK = 0x01
 
+AERIS_MAX_PACKET_SIZE = 512
+
 def packet_check(message):
     return message[0] == AERIS_SOF and message[-1] == AERIS_EOF

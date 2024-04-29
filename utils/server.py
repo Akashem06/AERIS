@@ -1,7 +1,7 @@
 import socket
 import serial
 
-from variable_lib import *
+from utils.scripts.variable_lib import *
 
 ################################################################################
 # USER DEFINES

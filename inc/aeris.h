@@ -13,6 +13,7 @@
 #define AERIS_START_MESSAGE_SIZE 12U
 
 #define AERIS_MAX_APP_SIZE 128 // USER DEFIEND IN KB
+#define AERIS_MAX_PACKET_SIZE 512
 
 // Status code
 typedef enum {
@@ -71,7 +72,7 @@ typedef struct {
     aeris_custom_receive receive_data;
 
     bool pending_data;
-    uint8_t message_buffer[AERIS_MAX_APP_SIZE];
+    uint8_t message_buffer[AERIS_MAX_PACKET_SIZE];
 } aeris_config;
 
 /**
