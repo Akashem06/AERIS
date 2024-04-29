@@ -1,5 +1,6 @@
 import unittest
 from client import Message
+from client import Sender
 from variable_lib import *
 
 ##################### SMALL BINARY TEST #####################
@@ -51,7 +52,7 @@ class TestMessageClass(unittest.TestCase):
     def test_data_message(self):
         message_small = Message(binary_path=test_small_binary_path)
         data_packet_small = message_small.data()
-        view_bytearray("DATA SMALL_BINARY PACKET:", data_packet_small)
+        # view_bytearray("DATA SMALL_BINARY PACKET:", data_packet_small)
 
         binary_test_size = 0
         for byte in data_packet_small[2:-1]:
@@ -60,9 +61,40 @@ class TestMessageClass(unittest.TestCase):
         self.assertEqual(message_small._binary_size, binary_test_size)
         self.assertEqual(data_packet_small, test_small_data_message)
 
+        message_medium = Message(binary_path=test_medium_binary_path)
+        data_packet_medium = message_medium.data()
+        # view_bytearray("DATA MEDIUM_BINARY PACKET:", data_packet_medium)
+
+        binary_test_size = 0
+        for byte in data_packet_medium[2:-1]:
+            binary_test_size += 1
+
+        self.assertEqual(message_medium._binary_size, binary_test_size)
+
+        message_large = Message(binary_path=test_large_binary_path)
+        data_packet_large = message_large.data()
+        # view_bytearray("DATA LARGE_BINARY PACKET:", data_packet_large)
+
+        binary_test_size = 0
+        for byte in data_packet_large[2:-1]:
+            binary_test_size += 1
+
+        self.assertEqual(message_large._binary_size, binary_test_size)
+
 class TestSenderClass(unittest.TestCase):
     def test_send_chunkify(self):
-        message = Message(binary_path=test_small_binary_path)
+        message_small = Message(binary_path=test_small_binary_path)
+        sender = Sender( (1,2), 1 ) # Random values used to access chunkify method
+        chunk_messages = sender._chunkify(message_small.data(), 512)
+        self.assertEqual(message_small.data(), bytes().join(chunk_messages))
+
+        message_medium = Message(binary_path=test_medium_binary_path)
+        chunk_messages = sender._chunkify(message_medium.data(), 512)
+        self.assertEqual(message_medium.data(), bytes().join(chunk_messages))
+
+        message_large = Message(binary_path=test_large_binary_path)
+        chunk_messages = sender._chunkify(message_large.data(), 512)
+        self.assertEqual(message_large.data(), bytes().join(chunk_messages))
 
 
 if __name__ == '__main__':
