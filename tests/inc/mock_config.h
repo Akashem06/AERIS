@@ -8,4 +8,4 @@
 
 extern aeris_config default_test_config;
 
-#endif // MOCK_CONFIG_HPP
+#endif  // MOCK_CONFIG_HPP

@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "aeris.h" 
+#include "aeris.h"
 
 // Message type
 typedef enum {
@@ -30,7 +30,6 @@ typedef struct {
             uint32_t error_data;
         } error_packet;
     } packet_payload;
-    uint32_t packet_crc;
     uint8_t packet_eof;
 } aeris_message_t;
 

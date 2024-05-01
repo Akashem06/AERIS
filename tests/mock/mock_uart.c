@@ -1,4 +1,5 @@
 #include "mock_uart.h"
+
 #include "mock_config.h"
 
 // rx buffer = message buffer

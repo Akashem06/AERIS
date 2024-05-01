@@ -2,7 +2,7 @@
 
 mkdir -p cppcheckbuild
 
-FILES=$(find . -name "*.c" -o -name "*.h" | grep -v "build/")
+FILES=$(find . -name "*.c" -o -name "*.h" | grep -v "cpputest" | grep -v "build/")
 
 SUPPRESSIONS="--suppress=missingIncludeSystem --suppress=unusedFunction --suppress=missingInclude --suppress=unmatchedSuppression"
 

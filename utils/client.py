@@ -27,7 +27,6 @@ class Message:
     @classmethod
     def start(cls):
         if os.path.isfile(cls._binary_path):
-            crc16 = (14).to_bytes(2, byteorder='little') # TODO: add custom crc16
             app_crc32 = (15).to_bytes(4, byteorder='little')
 
             packet = bytearray()
@@ -78,25 +77,18 @@ class Client:
         message = Message(binary_path=path)
         start_packet = message.start()
         data_packet = message.data()
-        Sender.send(cls._client_socket, packet, cls._serverAddrPort)
+        cls._sender.send(start_packet)
 
         server_msg, server_addr = cls._client_socket.recvfrom(BUFFER_SIZE)
 
         if packet_check(server_msg) and server_msg[1] == AERIS_TYPE_ACK and server_msg[2] == PACKET_ACK:
-            binary_byte_counter = 0
-            binary = open(path, 'rb')
-            # CHUNKIFY
-            while binary_byte_counter < binary_size:
-                chunk = binary.read(512)
-                binary_byte_counter += len(chunk)
-                Sender.send_data(cls._client_socket, chunk, cls._serverAddrPort)
+            cls._sender.send(data_packet)
         else:
             print("ERROR: Server did not receive start.")
 
-    @classmethod
-    def view_message(cls, server_msg):
+    def view_message(self, server_msg):
         print(f"RECEIVED MESSAGE: {' '.join([hex(byte) for byte in server_msg])}")
 
 # Usage example:
-# client_socket, serverAddrPort = Client.start(SERVERADDR, PORT)
+client = Client(SERVERADDR, PORT)
 # Client.send_binary_ota(client_socket, serverAddrPort)
