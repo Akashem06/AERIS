@@ -1,7 +1,7 @@
 #ifndef MOCK_CONFIG_H
 #define MOCK_CONFIG_H
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 512
 
 #include "aeris.h"
 #include "mock_uart.h"

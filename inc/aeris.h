@@ -12,7 +12,7 @@
 
 #define AERIS_START_MESSAGE_SIZE 12U
 
-#define AERIS_MAX_APP_SIZE 128  // USER DEFIEND IN KB
+#define AERIS_MAX_APP_SIZE 16000000 // 16 MB
 #define AERIS_MAX_PACKET_SIZE 512
 
 // Status code
@@ -111,6 +111,12 @@ uint8_t aeris_get_message_error(void);
  * @returns Returns state error
  */
 uint8_t aeris_get_error(void);
+
+/**
+ * @brief Retrieves if first data byte received
+ * @returns Returns if first data byte received
+ */
+bool aeris_get_first_data_byte_received(void);
 
 /**
  * @brief Sends ACK message

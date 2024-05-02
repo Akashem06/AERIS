@@ -44,8 +44,8 @@ typedef struct {
     uint32_t dfu_app_crc;
 
     bool app_failed_crc32;
-    bool message_failed_crc16;
-
+    bool first_data_byte_received;
+    
     uint32_t bytes_written;
 
     uint8_t ack_message_buffer[AERIS_ACK_MESSAGE_SIZE];

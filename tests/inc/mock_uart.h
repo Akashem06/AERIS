@@ -9,7 +9,7 @@
 #include "aeris.h"
 #include "aeris_prv.h"
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 512
 
 aeris_message_error uart_transmit(const uint8_t *data, size_t length);
 aeris_message_error uart_receive(uint8_t *buffer, size_t buffer_size);
